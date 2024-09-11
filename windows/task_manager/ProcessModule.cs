@@ -1,130 +1,112 @@
 ﻿using Microsoft.ReactNative.Managed;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-
-//using System.Diagnostics;
-using System.IO;
-using System.IO.Pipes;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Timers;
+using task_manager.Models;
 using Windows.System;
 using Windows.System.Diagnostics;
+
 
 namespace task_manager
 {
     [ReactModule("Process")]
     class ProcessModule
     {
-        int count = 0;
+        private const double UPDATE_TIMER_INTERVAL = 15;
+
+        private int appPollingInterval;
+        private System.Timers.Timer processUpdateTimer;
+        private string searchQuery = "";
+
+        private List<ProcessInfoModel> procesess = new List<ProcessInfoModel>();
+
+        [ReactEvent("onUpdated")]
+        public Action<double> UpdateProcessEvent { get; set; }
+
+
+        [ReactMethod("start")]
+        public async void Start(string query)
+        {
+            UpdateProcessEvent.Invoke(55);
+            //DiagnosticAccessStatus diagnosticAccessStatus = await AppDiagnosticInfo.RequestAccessAsync();
+            //if (diagnosticAccessStatus == DiagnosticAccessStatus.Allowed)
+            //{
+            //    searchQuery = query;
+            //    if (processUpdateTimer != null)
+            //    {
+            //        processUpdateTimer.Stop();
+            //        processUpdateTimer = null;
+            //    }
+            //    processUpdateTimer = new System.Timers.Timer(UPDATE_TIMER_INTERVAL * 1000);
+            //    processUpdateTimer.Elapsed += OnUpdateProcess;
+            //    processUpdateTimer.Start();
+            //}
+        }
+
+        [ReactMethod("stop")]
+        public void Stop()
+        {
+            if (processUpdateTimer != null)
+            {
+                processUpdateTimer.Stop();
+                processUpdateTimer = null;
+            }
+        }
+
 
         [ReactMethod("get")]
         public async void getProcess(string query, IReactPromise<string> promise)
         {
-            count++;
-            promise.Resolve(count.ToString());
-            //DiagnosticAccessStatus diagnosticAccessStatus = await AppDiagnosticInfo.RequestAccessAsync();
-            //if (diagnosticAccessStatus == DiagnosticAccessStatus.Allowed)
-            //{
-            //    var arr = new List<string>();
-            //    var memory = 0d;
-            //    IReadOnlyList<ProcessDiagnosticInfo> processes = ProcessDiagnosticInfo.GetForProcesses();
-            //    foreach (var info in processes)
-            //    {
-            //        var memoryReport = await GetProcessMemoryInMB(info);
-            //        memory += memoryReport;
+            if (processUpdateTimer != null)
+            {
+                processUpdateTimer.Stop();
+                processUpdateTimer = null;
+            }
+            processUpdateTimer = new System.Timers.Timer(UPDATE_TIMER_INTERVAL * 1000);
+            processUpdateTimer.Elapsed += OnUpdateProcess;
+            processUpdateTimer.Start();
 
-            //        var dia = info.GetAppDiagnosticInfos();
-
-            //        if (info.IsPackaged)
-            //            foreach (var process in dia)
-            //            {
-            //                arr.Add(process.AppInfo.DisplayInfo.DisplayName);
-            //            }
-            //        else
-            //            arr.Add(info.ExecutableFileName);
-            //    }
-
-
-            //    Console.WriteLine("complete");
-            //    promise.Resolve("complete");
-            //}
-            //else
-            //{
-            //    promise.Resolve("access denine");
-            //}
-
-
-            //switch (diagnosticAccessStatus)
-            //{
-            //    case DiagnosticAccessStatus.Allowed:
-            //        Debug.WriteLine("We can get diagnostics for all apps.");
-            //        break;
-            //    case DiagnosticAccessStatus.Limited:
-            //        Debug.WriteLine("We can only get diagnostics for this app package.");
-            //        break;
-            //}
-            //try
-            //{
-            //    var allDiagnosticInfos = await AppDiagnosticInfo.RequestInfoAsync();
-            //    var man = await AppDiagnosticInfo.RequestInfoForAppAsync();
-            //    var re = await AppDiagnosticInfo.RequestAccessAsync();
-            //    var tt = man[1].AppInfo.DisplayInfo.DisplayName;
-            //    promise.Resolve(allDiagnosticInfos[1].AppInfo.DisplayInfo.DisplayName);
-            //    //promise.Resolve(allDiagnosticInfos[0].AppInfo.DisplayInfo.DisplayName);
-            //}
-            //catch (Exception e)
-            //{
-
-            //    promise.Resolve(e.Message);
-            //}
-
-
-            //foreach (var diagnosticInfo in allDiagnosticInfos)
-            //{
-            //    Debug.WriteLine($"App: {diagnosticInfo.AppInfo.DisplayInfo.DisplayName}");
-
-            //    return diagnosticInfo
-
-            //    //foreach (var resourceGroup in resourceGroups)
-            //    //{
-            //    //    // Получение отчета о памяти
-            //    //    var memoryReport = resourceGroup.GetMemoryReport();
-            //    //    Debug.WriteLine($"Memory Usage: {memoryReport.TotalCommitUsageInMB} MB");
-
-            //    //    // Можно также получить другие данные, такие как CPU и состояние энергии
-            //    //}
-            //}
-
-
-            //return 55;
+            promise.Resolve("123");
         }
 
-        //private ProcessInformation getInformation(Process process) 
-        //{
-        //    var info = new ProcessInformation();
-        //    info.Name = process.ProcessName;
 
-        //    return info;
-        //}
-
-        public async Task<double> GetProcessMemoryInMB(ProcessDiagnosticInfo processInfo)
+        private async void OnUpdateProcess(object sender, object e)
         {
-            var memoryReport = processInfo.MemoryUsage.GetReport();
+           
+            procesess.Clear();
+            IReadOnlyList<ProcessDiagnosticInfo> processes = ProcessDiagnosticInfo.GetForProcesses();
+            if (processes != null)
+            {
+                foreach (ProcessDiagnosticInfo process in processes)
+                {
+                    //BitmapImage image = null;
+                    //if (process.IsPackaged)
+                    //{
+                    //    image = defaultAppImage;
+                    //}
+                    //else
+                    //{
+                    //    image = defaultProcessImage;
+                    //}
+                    ProcessInfoModel processInfo = new ProcessInfoModel(process);
+                    procesess.Add(processInfo);
+                }
+            }
 
-            ulong workingSetSizeInBytes = memoryReport.WorkingSetSizeInBytes;
+            // Создаем массив JSValue для каждого объекта User
+            var jsProcess = new JSValueArray();
 
-            double memoryInMB = workingSetSizeInBytes / (1024.0 * 1024.0);
+            foreach (var process in procesess)
+            {
+                var jsUser = new JSValueObject
+                {
+                    { "id", process.ProcessId },
+                    { "name", process.ExecutableFileName },
+                };
 
-            return memoryInMB;
-        }
-
-        public class ProcessInformation
-        {
-            public string Name { get; set; }
-            public int CpuLoad { get; set; }
-            public int MemoryLoad { get; set; }
+                jsProcess.Add(jsUser);
+            }
+            UpdateProcessEvent(12);
         }
     }
 }

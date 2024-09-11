@@ -1,19 +1,39 @@
 import React, { useEffect } from 'react';
-import { Button, ScrollView, StyleSheet, Text, useColorScheme, View } from 'react-native';
-import { PlatformColor, SafeAreaView } from 'react-native-windows';
+import {
+  Button,
+  NativeEventEmitter,
+  ScrollView,
+  StyleSheet,
+  useColorScheme,
+  View,
+} from 'react-native';
+import { NativeModules, PlatformColor, SafeAreaView } from 'react-native-windows';
 import { Theme } from './styles/palette.ts';
 import Search from './components/Search/Search.tsx';
 import ProcessView from './Process/ProcessView.tsx';
 import Process from './modules/NativeProcessModule.ts';
 
+const eventEmitter = new NativeEventEmitter(NativeModules.NativeEventEmitter);
+
 function App(): React.JSX.Element {
   Theme.isDarkTheme = useColorScheme() === 'dark';
 
-  const onClick = async () => {
-    console.log(Process);
-    Process?.get('').then((res) => {
-      console.log('res ', res);
+  useEffect(() => {
+    // Подписка на событие.
+    const subscription = eventEmitter.addListener('onUpdated', (number: number) => {
+      console.log('event ', number);
     });
+
+    // Отписка от события при размонтировании компонента.
+    return () => subscription?.remove();
+  }, []);
+
+  const onClick = async () => {
+    Process?.start();
+
+    // Process?.get('').then((res) => {
+    //   console.log('res ', res);
+    // });
   };
 
   return (
