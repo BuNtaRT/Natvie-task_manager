@@ -1,79 +1,38 @@
 import React, { useEffect } from 'react';
-import {
-  Button,
-  NativeEventEmitter,
-  ScrollView,
-  StyleSheet,
-  useColorScheme,
-  View,
-} from 'react-native';
-import { NativeModules, PlatformColor, SafeAreaView } from 'react-native-windows';
-import { Theme } from './styles/palette.ts';
+import { View } from 'react-native';
+import { SafeAreaView } from 'react-native-windows';
 import Search from './components/Search/Search.tsx';
-import ProcessView from './Process/ProcessView.tsx';
 import Process from './modules/NativeProcessModule.ts';
+import { styles } from './App.styles.ts';
+import ProcessTable from './components/ProcessTable/ProcessTable.tsx';
 
-const eventEmitter = new NativeEventEmitter(NativeModules.NativeEventEmitter);
-
-function App(): React.JSX.Element {
-  Theme.isDarkTheme = useColorScheme() === 'dark';
+const App = () => {
+  const { safeArea, appView, buttonView } = styles;
 
   useEffect(() => {
-    // Подписка на событие.
-    const subscription = eventEmitter.addListener('onUpdated', (number: number) => {
-      console.log('event ', number);
-    });
+    // Process.start();
 
-    // Отписка от события при размонтировании компонента.
-    return () => subscription?.remove();
+    return () => {
+      Process.stop();
+    };
   }, []);
 
-  const onClick = async () => {
-    Process?.start();
-
-    // Process?.get('').then((res) => {
-    //   console.log('res ', res);
-    // });
-  };
-
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <ScrollView contentInsetAdjustmentBehavior='automatic'>
-        <View
-          style={{
-            backgroundColor: PlatformColor('SystemControlAcrylicWindowBrush'),
-          }}>
-          <Search />
-          <ProcessView />
+    <SafeAreaView style={safeArea}>
+      <View style={appView}>
+        <Search />
 
-          <Button title='get' onPress={onClick} />
-        </View>
-      </ScrollView>
+        <ProcessTable />
+        {/*<ScrollView contentInsetAdjustmentBehavior='automatic'>*/}
+        {/*<View style={buttonView}>*/}
+        {/*  <ProcessView />*/}
+
+        {/*  /!*<Button title='get' onPress={onClick} />*!/*/}
+        {/*</View>*/}
+        {/*</ScrollView>*/}
+      </View>
     </SafeAreaView>
   );
-}
-
-const styles = StyleSheet.create({
-  safeArea: {
-    backgroundColor: 'transparent',
-    marginTop: 200,
-  },
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
-  },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-  },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
-  },
-  highlight: {
-    fontWeight: '700',
-  },
-});
+};
 
 export default App;

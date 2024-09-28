@@ -16,7 +16,7 @@ namespace task_manager
 #else
             JavaScriptBundleFile = "index";
             InstanceSettings.UseFastRefresh = true;
-#endif 
+#endif
 
 #if DEBUG
             InstanceSettings.UseDirectDebugger = true;

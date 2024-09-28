@@ -13,7 +13,14 @@ export interface Spec extends TurboModule {
 export default TurboModuleRegistry.getEnforcing<Spec>('Process');
 
 export type ProcessType = {
+  id: number;
   name: string;
-  cpuLoad: number;
+  cpuLoad?: number;
   memoryLoad: number;
+  memoryLoadPeak: number;
+  memorySwap: number;
+  memorySwapPeak: number;
+  diskOperation: number;
+  AppType: 'Packaged' | 'Win32';
+  time: string;
 };

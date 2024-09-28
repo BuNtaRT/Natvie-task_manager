@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text.Json.Serialization;
 using Windows.System.Diagnostics;
 using Windows.UI.Xaml.Media.Imaging;
 
@@ -6,20 +7,22 @@ namespace task_manager.Models
 {
     internal class ProcessInfoModel
     {
-        public BitmapImage Logo { get; set; }
+        //public BitmapImage Logo { get; set; }
         public string AppType { get; set; }
-        public TimeSpan UserTime { get { return cpuReport != null ? cpuReport.UserTime : TimeSpan.MinValue; } }
+        public string time { get; set; }
 
-        public uint ProcessId { get { return pdi.ProcessId; } }
-        public string ExecutableFileName { get { return pdi.ExecutableFileName; } }
+        public uint id { get; set; }
+        public string name { get; set; }
 
-        public ulong PageFileSizeInBytes { get { return memoryReport != null ? memoryReport.PageFileSizeInBytes : ulong.MinValue; } }
-        public ulong PeakPageFileSizeInBytes { get { return memoryReport.PeakPageFileSizeInBytes; } }
 
-        public ulong WorkingSetSizeInBytes { get { return memoryReport != null ? memoryReport.WorkingSetSizeInBytes : ulong.MinValue; } }
-        public ulong PeakWorkingSetSizeInBytes { get { return memoryReport.PeakWorkingSetSizeInBytes; } }
+        public ulong memorySwap { get; set; }
+        public ulong memorySwapPeak { get; set; }
+        public ulong cpuLoad { get; set; }
 
-        public long OtherOperationCount { get { return diskReport.OtherOperationCount; } }
+        public ulong memoryLoad { get; set; }
+        public ulong memoryLoadPeak { get; set; }
+
+        public long diskOperation { get; set; }
 
         private ProcessDiagnosticInfo pdi;
 
@@ -33,8 +36,17 @@ namespace task_manager.Models
             cpuReport = pdi.CpuUsage.GetReport();
             diskReport = pdi.DiskUsage.GetReport();
             memoryReport = pdi.MemoryUsage.GetReport();
-            Logo = null;
+            //Logo = null;
             AppType = p.IsPackaged ? "Packaged" : "Win32";
+            id = pdi.ProcessId;
+            name = pdi.ExecutableFileName;
+            memorySwap = memoryReport != null ? memoryReport.PageFileSizeInBytes : ulong.MinValue;
+            memorySwapPeak = memoryReport.PeakPageFileSizeInBytes;
+            memoryLoad = memoryReport != null ? memoryReport.WorkingSetSizeInBytes : ulong.MinValue; 
+            memoryLoadPeak = memoryReport.PeakWorkingSetSizeInBytes;
+
+            diskOperation = diskReport.OtherOperationCount;
+            time = cpuReport != null ? cpuReport.UserTime.ToString() : "";
         }
     }
 }

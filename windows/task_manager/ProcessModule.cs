@@ -1,7 +1,6 @@
 ﻿using Microsoft.ReactNative.Managed;
 using System;
 using System.Collections.Generic;
-using System.Timers;
 using task_manager.Models;
 using Windows.System;
 using Windows.System.Diagnostics;
@@ -12,7 +11,7 @@ namespace task_manager
     [ReactModule("Process")]
     class ProcessModule
     {
-        private const double UPDATE_TIMER_INTERVAL = 15;
+        private const double UPDATE_TIMER_INTERVAL = 10;
 
         private int appPollingInterval;
         private System.Timers.Timer processUpdateTimer;
@@ -21,26 +20,25 @@ namespace task_manager
         private List<ProcessInfoModel> procesess = new List<ProcessInfoModel>();
 
         [ReactEvent("onUpdated")]
-        public Action<double> UpdateProcessEvent { get; set; }
+        public Action<List<ProcessInfoModel>> UpdateProcessEvent { get; set; }
 
 
         [ReactMethod("start")]
         public async void Start(string query)
         {
-            UpdateProcessEvent.Invoke(55);
-            //DiagnosticAccessStatus diagnosticAccessStatus = await AppDiagnosticInfo.RequestAccessAsync();
-            //if (diagnosticAccessStatus == DiagnosticAccessStatus.Allowed)
-            //{
-            //    searchQuery = query;
-            //    if (processUpdateTimer != null)
-            //    {
-            //        processUpdateTimer.Stop();
-            //        processUpdateTimer = null;
-            //    }
-            //    processUpdateTimer = new System.Timers.Timer(UPDATE_TIMER_INTERVAL * 1000);
-            //    processUpdateTimer.Elapsed += OnUpdateProcess;
-            //    processUpdateTimer.Start();
-            //}
+            DiagnosticAccessStatus diagnosticAccessStatus = await AppDiagnosticInfo.RequestAccessAsync();
+            if (diagnosticAccessStatus == DiagnosticAccessStatus.Allowed)
+            {
+                searchQuery = query;
+                if (processUpdateTimer != null)
+                {
+                    processUpdateTimer.Stop();
+                    processUpdateTimer = null;
+                }
+                processUpdateTimer = new System.Timers.Timer(UPDATE_TIMER_INTERVAL * 1000);
+                processUpdateTimer.Elapsed += OnUpdateProcess;
+                processUpdateTimer.Start();
+            }
         }
 
         [ReactMethod("stop")]
@@ -93,20 +91,7 @@ namespace task_manager
                 }
             }
 
-            // Создаем массив JSValue для каждого объекта User
-            var jsProcess = new JSValueArray();
-
-            foreach (var process in procesess)
-            {
-                var jsUser = new JSValueObject
-                {
-                    { "id", process.ProcessId },
-                    { "name", process.ExecutableFileName },
-                };
-
-                jsProcess.Add(jsUser);
-            }
-            UpdateProcessEvent(12);
+            UpdateProcessEvent(procesess);
         }
     }
 }
