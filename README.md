@@ -1,3 +1,6 @@
+!!!RIP
+this type of application runs in an isolated container (UWP) and cannot interact with external applications, especially terminating processes, it is the most inappropriate type of application to write in ReactNative
+
 # Getting Started
 
 ### Step 1 install
